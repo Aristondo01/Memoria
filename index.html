@@ -1,0 +1,255 @@
+<html>
+    <head>
+        <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+        <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+        <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.24.0/babel.js"></script>
+    <style>
+
+    </style>
+
+    </head>
+    <body>
+        <div id="root"></div>
+
+        <script type="text/babel">
+            //---ESTILOS-------
+            const styles={
+
+                StyleHead : {
+                    height:'100px',
+                    width:'100%',
+                    background: '#282828',
+                    display:'flex',
+                    alignItems:'center',
+                    justifyContent: 'space-around',
+                    flexDirection: 'row',
+                    borderRadius: '50px'
+    
+                },
+
+                StyleButton:{
+                    bgcolor:'transparent'
+    
+                },
+
+                StyleLetra:{
+                    fontSize:'25px',
+                    color:'white'
+                },
+                StyleReverso:{
+                    height:'175px',
+                    width:'122px',
+                },
+                Tablero:{
+                    //display:'flex',
+                    //flexWrap:'wrap',
+                    width:'700px',
+                    height:'800px',
+                    //justifyContent:'space-around',
+                    margin:'auto',
+                    paddingTop:'25px',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(5, 132px)',
+                    gridGap: '0px',
+                    gridAutoRows: '187px',
+                    
+
+                },
+                container:{
+                    display:'flex',
+                    justyfyContent :'center',
+                    flexDirection: 'column',
+
+                },
+            } 
+            //Función para generar cartas
+            const NUM_CARTAS =20
+            const GenerateCards= () =>
+            {
+                let opciones=["./deku.jpg","./sukuna.jpg","./tanjiro.jpg","./Light.jpg","./asta.jpg","./eren.jpg","./Edward.jpg","./mikey.jpg","./Eva1.jpg","./kaneki.jpg"]
+                
+                let baraja=[]
+                for(let j=0; j<2;j++)
+                {
+                    for(let i=0; i<NUM_CARTAS/2;i++)
+                    {    
+
+                        baraja.push(opciones[i])
+                    }
+                }
+                for (let i = baraja.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    const temp = baraja[i];
+                    baraja[i] = baraja[j];
+                    baraja[j] = temp;
+                  }
+                
+                  return baraja
+                
+
+            }
+            //Encabezado para tener control del juego 
+            const Header=({cuenta})=>{
+                
+                return(
+                                <div style={styles.StyleHead}>
+                                    <div>
+                                        <h1 style={styles.StyleLetra} onClick={()=> location.reload()}>Jugar de nuevo</h1>
+                                    </div>
+                                    <div className="Titulo">
+                                        <h1 style={styles.StyleLetra}>MEMORIA</h1>
+                                    </div>
+                                    <div className="Contador">
+                                        <h1 style={styles.StyleLetra} >Contador: {cuenta} </h1>
+                                    </div>
+                                </div>
+                )
+            } 
+            const Win=({Mostrar})=>{
+                const styles={
+
+                    Win : {
+                        height:'100px',
+                        width:'75px',
+                        display:'flex',
+                        alignItems:'center',
+                        justifyContent: 'center',
+                        position:'absolute',
+                        paddingTop:'10px'
+        
+                    },
+                    mostrar:{
+                        visibility:'visible',
+                        display:'flex',
+                        alignItems:'center',
+                        justifyContent: 'center',
+                        paddingTop:'50px'
+                    },
+                    nomostrar:{
+                        visibility:'hidden'
+                        
+                    }
+                }
+                
+                return(
+                        <div style={ Mostrar ? styles.mostrar : styles.nomostrar}>
+                            <img style={styles.win} src='./Ganaste.jpg'></img>
+                        </div>
+                )
+            } 
+            //Componente del tablero que maneja la generación de cartas y las ubica en pantalla
+            const Board =()=>{
+                const[contador, setContador] = React.useState(0)
+
+                const contGanar=React.useRef(0)
+                const[boolganar, setGanar] = React.useState(false)
+
+                const[ultima,setUltima] = React.useState(null)
+                const[cartas, setCartas] = React.useState(GenerateCards().map(card=>(
+                    {img:card,flipped:false})))
+
+                const[timer,setTimer] = React.useState(false)    
+
+
+                const flip = (index) => {
+                
+                    if (!timer && !cartas[index].flipped) {
+                        const copy = [...cartas]
+                        copy[index].flipped = true
+                        setCartas(copy)
+                        if (ultima===null) {
+                            setUltima(index)
+                        } else {
+                            if (copy[index].img === copy[ultima].img) {
+                                setUltima(null)
+                                setContador(contador+1)
+                                //console.log("entre a comparar")
+                                contGanar.current++
+
+                                if(contGanar.current===(10)) {
+                                    setTimeout(() => {
+                                        setGanar(true)
+                                    },1500)
+                                }
+
+                            } else {
+                                setContador(contador+1)
+                                setTimer(true)
+                                setTimeout(()=> {
+                                    unflip(index,ultima) 
+                                    setUltima(null)
+                                    setTimer(false)
+                                },1500)
+                            }
+                            
+                        }
+                    }
+                }
+
+                const unflip = (index,index2) => {
+                    const copy = [...cartas]
+                    copy[index].flipped = false
+                    copy[index2].flipped = false
+                    setCartas(copy)
+                }
+
+                return(
+                    <React.Fragment>
+                        <Header cuenta={contador}/>
+                        {
+                            boolganar ? <Win Mostrar={boolganar}/>
+                            :
+                            <div style={styles.Tablero}>
+                                {cartas.map((carta,index)=> <CartaL key={`${carta.img}${index}`} icono ={carta.img} estado={carta.flipped} onFlip={() => flip(index)}/>)}
+                            </div>
+                        }
+                    </React.Fragment>
+                )
+            }
+
+            const CartaL = ({ icono, estado, onFlip}) => {
+                const styles = {
+                    container:{
+                        transition: 'all 1s ease-out',
+                        transform: 'rotateY(0deg)',
+                        background: 'black',
+                        height: '175px',
+                        width:'122px',
+                        transformStyle: 'preserve-3d',
+                        backgroundSize: '190px',
+                        boxShadow: 'black 0px 7px 29px 0px',
+                    },
+                    containerA:{
+                        transform: 'rotateY(180deg)',
+                    },
+                    image:{
+                        height:'100%',
+                        width:'100%',
+                    }
+                }
+                return(
+                    <a style={{...styles.container, transform: estado ? 'rotateY(180deg)' : 'rotateY(0deg)'}} onClick ={onFlip}>
+                        <img style={styles.image} src={`${estado ? icono : './Reverso.jpg'}`}></img>
+                    </a>
+                )
+            }
+            
+            const App =() =>{
+                document.body.style.background="Black"
+                //document.body.style.justifyContent="center"
+                return(
+                    
+                    <div>
+                        <Board/>
+                    </div>
+                )
+            }            
+
+            ReactDOM.render(
+                <App/>,
+                document.getElementById('root')
+            )
+
+        </script>
+    </body>
+</html>
